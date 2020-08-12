@@ -1,12 +1,14 @@
 package com.ufpb.crdb.models;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,6 +32,9 @@ public class Disciplina {
   private Double nota;
 
   private Integer likes;
+
+  @OneToMany(mappedBy = "disciplina")
+  private List<Comentario> comentarios;
 
   @Column(name = "created_at")
   private OffsetDateTime createdAt;
