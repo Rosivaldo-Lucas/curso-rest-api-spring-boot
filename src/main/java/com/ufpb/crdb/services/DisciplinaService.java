@@ -21,6 +21,10 @@ public class DisciplinaService {
   @Autowired
   private DisciplinaRepository disciplinaRepository;
 
+  public List<Disciplina> buscar(String nome) {
+    return disciplinaRepository.findByNomeContaining(nome.toUpperCase());
+  }
+
   @PostConstruct
   public void init() {
     ObjectMapper mapper = new ObjectMapper();
