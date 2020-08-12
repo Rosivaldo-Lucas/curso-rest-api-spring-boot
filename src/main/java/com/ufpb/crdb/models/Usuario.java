@@ -10,6 +10,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -36,6 +38,7 @@ public class Usuario {
   private String senha;
 
   @OneToMany(mappedBy = "usuario")
+  @JsonIgnore
   private List<Comentario> comentarios;
 
   @Column(name = "created_at")
