@@ -11,6 +11,7 @@ import com.ufpb.crdb.services.DisciplinaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,6 +36,17 @@ public class DisciplinaController {
     Comentario comentarioSalvo = disciplinaService.adicionarComentario(id, comentario);
   
     return new ResponseEntity<>(comentarioSalvo, HttpStatus.CREATED);
+  }
+
+  @DeleteMapping("/{disciplina_id}/comentario/{comentario_id}")
+  public ResponseEntity<Void> deletarComentario(@PathVariable Long disciplina_id, @PathVariable Long comentario_id) {
+    try {
+      disciplinaService.deletarComentario(disciplina_id, comentario_id);
+
+      return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    } catch (IllegalArgumentException ex) {
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
   }
 
 }

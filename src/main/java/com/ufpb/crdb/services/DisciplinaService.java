@@ -53,6 +53,29 @@ public class DisciplinaService {
     return comentarioRepository.save(comentario);
   }
 
+  public void deletarComentario(Long disciplina_id, Long comentario_id) {
+    var optDisciplina = disciplinaRepository.findById(disciplina_id);
+
+    if (optDisciplina.isEmpty()) {
+      throw new IllegalArgumentException();
+    }
+
+    var optComentario = comentarioRepository.findById(comentario_id);
+
+    if (optComentario.isEmpty()){
+      throw new IllegalArgumentException();
+    }
+
+    for (var comentario : optDisciplina.get().getComentarios()) {
+      if (comentario.getId() == comentario_id && comentario.getDisciplina().getId() == disciplina_id) {
+        comentarioRepository.delete(optComentario.get());
+        return;
+      }
+    }
+
+    throw new IllegalArgumentException();
+  }
+
   @PostConstruct
   public void init() {
     ObjectMapper mapper = new ObjectMapper();
