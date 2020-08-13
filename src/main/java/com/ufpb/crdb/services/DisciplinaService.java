@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import javax.annotation.PostConstruct;
 
@@ -13,10 +12,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ufpb.crdb.converters.DisciplinaConverter;
 import com.ufpb.crdb.dtos.DisciplinaResponseDTO;
 import com.ufpb.crdb.dtos.response.DisciplinaResDTO;
+import com.ufpb.crdb.exceptions.RecursoNaoEncontradoException;
 import com.ufpb.crdb.models.Comentario;
 import com.ufpb.crdb.models.Disciplina;
 import com.ufpb.crdb.models.Likes;
-import com.ufpb.crdb.models.Usuario;
 import com.ufpb.crdb.repositories.ComentarioRepository;
 import com.ufpb.crdb.repositories.DisciplinaRepository;
 import com.ufpb.crdb.repositories.LikesRepository;
@@ -43,6 +42,12 @@ public class DisciplinaService {
   @Autowired
   private DisciplinaConverter disciplinaConverter;
 
+  @Autowired
+  private JWTService jwtService;
+
+  @Autowired
+  private UsuarioService usuarioService;
+
   public List<DisciplinaResDTO> buscar(String nome) {
     return disciplinaConverter
       .converterListaEntidadeParaListaDTO(
@@ -51,68 +56,56 @@ public class DisciplinaService {
   }
 
   public DisciplinaResponseDTO buscarPorId(Long id) {
-    var disciplina = disciplinaRepository.findById(id);
+    // TODO depois refatorar este código
     
-    if (disciplina.isEmpty()) {
-      throw new IllegalArgumentException();
-    }
+    var disciplina = buscarDisciplinaPorId(id);
 
     DisciplinaResponseDTO disciplinaDTO = new DisciplinaResponseDTO();
-    disciplinaDTO.setId(disciplina.get().getId());
-    disciplinaDTO.setNome(disciplina.get().getNome());
-    // disciplinaDTO.setNota(disciplina.get().getNota());
-    disciplinaDTO.setLikes((long) disciplina.get().getLikes().size());
+    disciplinaDTO.setId(disciplina.getId());
+    disciplinaDTO.setNome(disciplina.getNome());
+    disciplinaDTO.setNota(disciplina.getNota());
+    disciplinaDTO.setLikes((long) disciplina.getLikes().size());
 
     return disciplinaDTO;
   }
 
-  public Comentario adicionarComentario(Long id, Comentario comentario) {
-    Optional<Disciplina> optDisciplina = disciplinaRepository.findById(id);
+  public Comentario adicionarComentario(Long id, Comentario comentario, String authorization) {
+    String subjectEmail = jwtService.getToken(authorization);
 
-    if (optDisciplina.isEmpty()) {
-      throw new IllegalArgumentException();
-    }
+    var usuario = usuarioService.consultarUsuario(subjectEmail);
 
-    Optional<Usuario> optUsuario = usuarioRepository.findById((long) 1);
+    Disciplina disciplina = buscarDisciplinaPorId(id);
 
     comentario.setCreatedAt(OffsetDateTime.now());
     comentario.setUpdatedAt(OffsetDateTime.now());
-    comentario.setDisciplina(optDisciplina.get());
-    comentario.setUsuario(optUsuario.get());
+    comentario.setDisciplina(disciplina);
+    comentario.setUsuario(usuario);
 
     return comentarioRepository.save(comentario);
   }
 
   public void deletarComentario(Long disciplina_id, Long comentario_id) {
-    var optDisciplina = disciplinaRepository.findById(disciplina_id);
-
-    if (optDisciplina.isEmpty()) {
-      throw new IllegalArgumentException();
-    }
+    var disciplina = buscarDisciplinaPorId(disciplina_id);
 
     var optComentario = comentarioRepository.findById(comentario_id);
 
     if (optComentario.isEmpty()){
-      throw new IllegalArgumentException();
+      throw new RecursoNaoEncontradoException("Comentário não encontrado.");
     }
 
-    for (var comentario : optDisciplina.get().getComentarios()) {
+    for (var comentario : disciplina.getComentarios()) {
       if (comentario.getId() == comentario_id && comentario.getDisciplina().getId() == disciplina_id) {
         comentarioRepository.delete(optComentario.get());
         return;
       }
     }
 
-    throw new IllegalArgumentException();
+    throw new RecursoNaoEncontradoException("Recurso não encontrado.");
   }
 
   public void adicionarLike(Long disciplina_id) {
 
-    Optional<Disciplina> optDisciplina = disciplinaRepository.findById(disciplina_id);
-
-    if (optDisciplina.isEmpty()) {
-      throw new IllegalArgumentException();
-    }
+    Disciplina disciplina = buscarDisciplinaPorId(disciplina_id);
 
     var usuario = usuarioRepository.findById((long) 1); // Vem do AuthorizationHeader
 
@@ -132,9 +125,9 @@ public class DisciplinaService {
     }
 
     Likes addLike = new Likes();
-    addLike.setDisciplina(optDisciplina.get());
+    addLike.setDisciplina(disciplina);
     addLike.setUsuario(usuario.get());
-    addLike.setLikes(1);
+    addLike.setLikes(1); // Usuário do Authorization
     addLike.setCreatedAt(OffsetDateTime.now());
     addLike.setUpdatedAt(OffsetDateTime.now());
 
@@ -142,21 +135,27 @@ public class DisciplinaService {
   }
   
   public void adicionarNota(Long id, Disciplina disciplina) {
+    Disciplina disciplinaSalva = buscarDisciplinaPorId(id);
+
+    if (disciplinaSalva.getNota() == null) {
+      disciplinaSalva.setNota(disciplina.getNota());
+    } else {
+      disciplinaSalva.setNota((disciplinaSalva.getNota() + disciplina.getNota()) / 2);
+    }
+
+    disciplinaRepository.save(disciplinaSalva);
+  }
+
+  private Disciplina buscarDisciplinaPorId(Long id) {
     var optDisciplina = disciplinaRepository.findById(id);
 
     if (optDisciplina.isEmpty()) {
-      throw new IllegalArgumentException();
+      throw new RecursoNaoEncontradoException("Disciplina não encontrada.");
     }
 
-    if (optDisciplina.get().getNota() == null) {
-      optDisciplina.get().setNota(disciplina.getNota());
-    } else {
-      optDisciplina.get().setNota((optDisciplina.get().getNota() + disciplina.getNota()) / 2);
-    }
-
-    disciplinaRepository.save(optDisciplina.get());
+    return optDisciplina.get();
   }
-
+  
   @PostConstruct
   public void init() {
     ObjectMapper mapper = new ObjectMapper();

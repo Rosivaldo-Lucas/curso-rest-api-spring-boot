@@ -29,4 +29,16 @@ public class AppHandlerException extends ResponseEntityExceptionHandler {
     return handleExceptionInternal(ex, appErro, new HttpHeaders(), statusCode, request);
   }
 
+  @ExceptionHandler(RecursoNaoEncontradoException.class)
+  public ResponseEntity<Object> handlerRecursoNaoEncontradoException(RecursoNaoEncontradoException ex, WebRequest request) {
+    var statusCode = HttpStatus.NOT_FOUND;
+
+    appErro.setErro(statusCode.name());
+    appErro.setStatus(statusCode.value());
+    appErro.setMensagem(ex.getMessage());
+    appErro.setTimestamps(OffsetDateTime.now());
+
+    return handleExceptionInternal(ex, appErro, new HttpHeaders(), statusCode, request);
+  }
+
 }
