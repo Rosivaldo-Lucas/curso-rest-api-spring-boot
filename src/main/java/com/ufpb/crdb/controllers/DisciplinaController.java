@@ -5,6 +5,7 @@ import java.util.List;
 import javax.websocket.server.PathParam;
 
 import com.ufpb.crdb.dtos.DisciplinaResponseDTO;
+import com.ufpb.crdb.dtos.response.DisciplinaResDTO;
 import com.ufpb.crdb.models.Comentario;
 import com.ufpb.crdb.models.Disciplina;
 import com.ufpb.crdb.services.DisciplinaService;
@@ -28,7 +29,7 @@ public class DisciplinaController {
   private DisciplinaService disciplinaService;
 
   @GetMapping
-  public ResponseEntity<List<Disciplina>> buscarPorSubstring(@PathParam(value = "nome") String nome) {
+  public ResponseEntity<List<DisciplinaResDTO>> buscarPorSubstring(@PathParam(value = "nome") String nome) {
     return new ResponseEntity<>(disciplinaService.buscar(nome), HttpStatus.OK);
   }
 

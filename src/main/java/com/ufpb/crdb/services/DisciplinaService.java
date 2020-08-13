@@ -10,7 +10,9 @@ import javax.annotation.PostConstruct;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ufpb.crdb.converters.DisciplinaConverter;
 import com.ufpb.crdb.dtos.DisciplinaResponseDTO;
+import com.ufpb.crdb.dtos.response.DisciplinaResDTO;
 import com.ufpb.crdb.models.Comentario;
 import com.ufpb.crdb.models.Disciplina;
 import com.ufpb.crdb.models.Likes;
@@ -38,8 +40,14 @@ public class DisciplinaService {
   @Autowired
   private LikesRepository likesRepository;
 
-  public List<Disciplina> buscar(String nome) {
-    return disciplinaRepository.findByNomeContaining(nome.toUpperCase());
+  @Autowired
+  private DisciplinaConverter disciplinaConverter;
+
+  public List<DisciplinaResDTO> buscar(String nome) {
+    return disciplinaConverter
+      .converterListaEntidadeParaListaDTO(
+        disciplinaRepository.findByNomeContaining(nome.toUpperCase())
+      );
   }
 
   public DisciplinaResponseDTO buscarPorId(Long id) {

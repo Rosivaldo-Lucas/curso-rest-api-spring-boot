@@ -27,7 +27,6 @@ public class AppHandlerException extends ResponseEntityExceptionHandler {
     appErro.setTimestamps(OffsetDateTime.now());
 
     return handleExceptionInternal(ex, appErro, new HttpHeaders(), statusCode, request);
-
   }
 
 }
