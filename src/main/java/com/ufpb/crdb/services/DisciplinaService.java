@@ -12,9 +12,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ufpb.crdb.models.Comentario;
 import com.ufpb.crdb.models.Disciplina;
+import com.ufpb.crdb.models.Likes;
 import com.ufpb.crdb.models.Usuario;
 import com.ufpb.crdb.repositories.ComentarioRepository;
 import com.ufpb.crdb.repositories.DisciplinaRepository;
+import com.ufpb.crdb.repositories.LikesRepository;
 import com.ufpb.crdb.repositories.UsuarioRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +24,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class DisciplinaService {
-  
+
   @Autowired
   private DisciplinaRepository disciplinaRepository;
 
@@ -31,6 +33,9 @@ public class DisciplinaService {
 
   @Autowired
   private UsuarioRepository usuarioRepository;
+
+  @Autowired
+  private LikesRepository likesRepository;
 
   public List<Disciplina> buscar(String nome) {
     return disciplinaRepository.findByNomeContaining(nome.toUpperCase());
@@ -76,6 +81,41 @@ public class DisciplinaService {
     throw new IllegalArgumentException();
   }
 
+  public void adicionarLike(Long disciplina_id) {
+
+    Optional<Disciplina> optDisciplina = disciplinaRepository.findById(disciplina_id);
+
+    if (optDisciplina.isEmpty()) {
+      throw new IllegalArgumentException();
+    }
+
+    var usuario = usuarioRepository.findById((long) 1); // Vem do AuthorizationHeader
+
+    var likes = likesRepository.findAll();
+
+    for (var like : likes) {
+      if (like.getDisciplina().getId() == disciplina_id && like.getUsuario().getId() == usuario.get().getId()) {
+        if (like.getLikes() == 0) {
+          like.setLikes(1);
+          likesRepository.save(like);
+        } else {
+          like.setLikes(0);
+          likesRepository.save(like);
+        }
+        return;
+      }
+    }
+
+    Likes addLike = new Likes();
+    addLike.setDisciplina(optDisciplina.get());
+    addLike.setUsuario(usuario.get());
+    addLike.setLikes(1);
+    addLike.setCreatedAt(OffsetDateTime.now());
+    addLike.setUpdatedAt(OffsetDateTime.now());
+
+    likesRepository.save(addLike);
+  }
+  
   @PostConstruct
   public void init() {
     ObjectMapper mapper = new ObjectMapper();

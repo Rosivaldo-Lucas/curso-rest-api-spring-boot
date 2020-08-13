@@ -16,7 +16,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
 @Entity
 @Data
 @AllArgsConstructor
@@ -40,6 +39,10 @@ public class Usuario {
   @OneToMany(mappedBy = "usuario")
   @JsonIgnore
   private List<Comentario> comentarios;
+
+  @OneToMany(mappedBy = "usuario")
+  @JsonIgnore
+  private List<Likes> likes;
 
   @Column(name = "created_at")
   private OffsetDateTime createdAt;

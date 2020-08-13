@@ -49,4 +49,11 @@ public class DisciplinaController {
     }
   }
 
+  @PostMapping("/{disciplina_id}/like")
+  public ResponseEntity<Void> adicionarLike(@PathVariable Long disciplina_id) {
+    disciplinaService.adicionarLike(disciplina_id);
+
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
+
 }
