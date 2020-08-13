@@ -10,6 +10,7 @@ import javax.annotation.PostConstruct;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ufpb.crdb.dtos.DisciplinaResponseDTO;
 import com.ufpb.crdb.models.Comentario;
 import com.ufpb.crdb.models.Disciplina;
 import com.ufpb.crdb.models.Likes;
@@ -39,6 +40,22 @@ public class DisciplinaService {
 
   public List<Disciplina> buscar(String nome) {
     return disciplinaRepository.findByNomeContaining(nome.toUpperCase());
+  }
+
+  public DisciplinaResponseDTO buscarPorId(Long id) {
+    var disciplina = disciplinaRepository.findById(id);
+    
+    if (disciplina.isEmpty()) {
+      throw new IllegalArgumentException();
+    }
+
+    DisciplinaResponseDTO disciplinaDTO = new DisciplinaResponseDTO();
+    disciplinaDTO.setId(disciplina.get().getId());
+    disciplinaDTO.setNome(disciplina.get().getNome());
+    // disciplinaDTO.setNota(disciplina.get().getNota());
+    disciplinaDTO.setLikes((long) disciplina.get().getLikes().size());
+
+    return disciplinaDTO;
   }
 
   public Comentario adicionarComentario(Long id, Comentario comentario) {
@@ -116,6 +133,22 @@ public class DisciplinaService {
     likesRepository.save(addLike);
   }
   
+  public void adicionarNota(Long id, Disciplina disciplina) {
+    var optDisciplina = disciplinaRepository.findById(id);
+
+    if (optDisciplina.isEmpty()) {
+      throw new IllegalArgumentException();
+    }
+
+    if (optDisciplina.get().getNota() == null) {
+      optDisciplina.get().setNota(disciplina.getNota());
+    } else {
+      optDisciplina.get().setNota((optDisciplina.get().getNota() + disciplina.getNota()) / 2);
+    }
+
+    disciplinaRepository.save(optDisciplina.get());
+  }
+
   @PostConstruct
   public void init() {
     ObjectMapper mapper = new ObjectMapper();

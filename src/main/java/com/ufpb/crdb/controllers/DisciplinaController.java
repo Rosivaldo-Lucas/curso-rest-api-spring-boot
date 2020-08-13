@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.websocket.server.PathParam;
 
+import com.ufpb.crdb.dtos.DisciplinaResponseDTO;
 import com.ufpb.crdb.models.Comentario;
 import com.ufpb.crdb.models.Disciplina;
 import com.ufpb.crdb.services.DisciplinaService;
@@ -27,8 +28,13 @@ public class DisciplinaController {
   private DisciplinaService disciplinaService;
 
   @GetMapping
-  public ResponseEntity<List<Disciplina>> buscar(@PathParam(value = "nome") String nome) {
+  public ResponseEntity<List<Disciplina>> buscarPorSubstring(@PathParam(value = "nome") String nome) {
     return new ResponseEntity<>(disciplinaService.buscar(nome), HttpStatus.OK);
+  }
+
+  @GetMapping("/{id}")
+  public ResponseEntity<DisciplinaResponseDTO> buscarPorId(@PathVariable Long id) {
+    return new ResponseEntity<>(disciplinaService.buscarPorId(id), HttpStatus.OK);
   }
 
   @PostMapping("/{id}/comentario")
@@ -52,6 +58,13 @@ public class DisciplinaController {
   @PostMapping("/{disciplina_id}/like")
   public ResponseEntity<Void> adicionarLike(@PathVariable Long disciplina_id) {
     disciplinaService.adicionarLike(disciplina_id);
+
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
+
+  @PostMapping("/{id}/nota")
+  public ResponseEntity<Void> adicionarNota(@PathVariable Long id, @RequestBody Disciplina disciplina) {
+    disciplinaService.adicionarNota(id, disciplina);
 
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
